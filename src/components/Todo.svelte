@@ -1,5 +1,6 @@
 <script lang="ts">
   import "$root/styles/todo.css";
+  import { fade, slide } from "svelte/transition";
   import type { ITodo } from "$root/types/todo";
 
   type CompleteTodoType = (id: string) => void;
@@ -38,7 +39,7 @@
   }
 </script>
 
-<li class:editing class="todo">
+<li in:slide out:fade class:editing class="todo">
   <div class="todo-item">
     <div>
       <input

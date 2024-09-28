@@ -1,5 +1,6 @@
 <script lang="ts">
   import "$root/styles/todos.css";
+  import { tick } from "svelte";
   import { Guid } from "guid-typescript";
   import type { ITodo, FiltersType } from "$root/types/todo";
   import { useStorage } from "$root/stores/useStorage";
@@ -15,8 +16,10 @@
   $: filteredTodos = filterTodos($todos, selectedFilter);
   $: completedTodos = $todos.filter((todo) => todo.completed).length;
   $: incompletedTodos = $todos.length - completedTodos;
+  $: duration = filtering ? 0 : 250;
 
   let selectedFilter: FiltersType = "all";
+  let filtering: boolean = false;
 
   function generateRandomGuid(): string {
     return Guid.raw();
@@ -60,9 +63,14 @@
     $todos[currentTodoIndex].text = newTodo;
   }
 
-  function setFilter(newFilter: FiltersType): void {
+  async function setFilter(newFilter: FiltersType): Promise<void> {
+    filtering = true;
+    await tick();
     selectedFilter = newFilter;
+    await tick();
+    filtering = false;
   }
+
   function filterTodos(todos: ITodo[], filter: FiltersType): ITodo[] {
     switch (filter) {
       case "all":
