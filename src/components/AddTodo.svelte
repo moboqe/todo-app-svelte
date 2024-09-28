@@ -10,11 +10,27 @@
 
   let todo = "";
 
-  function handleSubmit() {
+  function handleSubmit(): void {
+    inputError = validateInput(todo);
+    if (inputError.length > 0) {
+      return;
+    }
     addTodo(todo);
     todo = "";
   }
+  let inputError: string;
+  function validateInput(todo: string): string {
+    if (todo.length > 0) {
+      return "";
+    } else {
+      return "Введите текст";
+    }
+  }
 </script>
+
+{#if inputError}
+  <p class="error">{inputError}</p>
+{/if}
 
 <form on:submit|preventDefault={handleSubmit}>
   {#if todosAmount > 0}
