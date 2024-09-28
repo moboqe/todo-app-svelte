@@ -2,27 +2,21 @@
   import "$root/styles/todos.css";
   import { Guid } from "guid-typescript";
   import type { ITodo, FiltersType } from "$root/types/todo";
+  import { useStorage } from "$root/stores/useStorage";
   import AddTodo from "./AddTodo.svelte";
   import Todo from "./Todo.svelte";
   import TodosLeft from "./TodosLeft.svelte";
   import FilterTodos from "./FilterTodos.svelte";
   import ClearTodos from "./ClearTodos.svelte";
 
-  let todos: ITodo[] = [
-    { id: "1e4a59703af84", text: "Todo 1", completed: true },
-    { id: "9e09bcd7b9349", text: "Todo 2", completed: false },
-    { id: "9e4273a51a37c", text: "Todo 3", completed: false },
-    { id: "53ae48bf605cc", text: "Todo 4", completed: false },
-  ];
+  let todos = useStorage<ITodo[]>("todos[]", []);
+
+  $: todosAmount = $todos.length;
+  $: filteredTodos = filterTodos($todos, selectedFilter);
+  $: completedTodos = $todos.filter((todo) => todo.completed).length;
+  $: incompletedTodos = $todos.length - completedTodos;
 
   let selectedFilter: FiltersType = "all";
-
-  $: console.log(todos);
-
-  $: todosAmount = todos.length;
-  $: incompletedTodos = todos.filter((todo: ITodo) => !todo.completed).length;
-  $: completedTodos = getCompletedTodos().length;
-  $: filteredTodos = filterTodos(todos, selectedFilter);
 
   function generateRandomGuid(): string {
     return Guid.raw();
@@ -34,18 +28,18 @@
       text: todo,
       completed: false,
     };
-    todos = [...todos, newTodoItem];
+    $todos = [...$todos, newTodoItem];
   }
   function toggleCompleted(event: MouseEvent): void {
     let { checked } = event.target as HTMLInputElement;
-    todos = todos.map((todo) => ({
+    $todos = $todos.map((todo) => ({
       ...todo,
       completed: checked,
     }));
   }
 
   function completeTodo(id: string): void {
-    todos = todos.map((todo) => {
+    $todos = $todos.map((todo) => {
       if (todo.id === id) {
         todo.completed = !todo.completed;
       }
@@ -54,41 +48,32 @@
   }
 
   function clearCompleted(): void {
-    todos = todos.filter((todo: ITodo) => !todo.completed);
+    $todos = $todos.filter((todo: ITodo) => !todo.completed);
   }
 
   function removeTodo(id: string): void {
-    todos = todos.filter((todo: ITodo) => todo.id !== id);
+    $todos = $todos.filter((todo: ITodo) => todo.id !== id);
   }
 
   function editTodo(id: string, newTodo: string): void {
-    let currentTodoIndex = todos.findIndex((todo: ITodo) => todo.id === id);
-    todos[currentTodoIndex].text = newTodo;
+    let currentTodoIndex = $todos.findIndex((todo: ITodo) => todo.id === id);
+    $todos[currentTodoIndex].text = newTodo;
   }
 
   function setFilter(newFilter: FiltersType): void {
     selectedFilter = newFilter;
   }
-  function filterTodos(todo: ITodo[], filter: FiltersType): ITodo[] {
+  function filterTodos(todos: ITodo[], filter: FiltersType): ITodo[] {
     switch (filter) {
       case "all":
-        return getAllTodos();
+        return todos;
       case "active":
-        return getActiveTodos();
+        return todos.filter((todo: ITodo) => !todo.completed);
       case "completed":
-        return getCompletedTodos();
+        return todos.filter((todo: ITodo) => todo.completed);
       default:
-        return getAllTodos();
+        return todos;
     }
-  }
-  function getAllTodos(): ITodo[] {
-    return todos;
-  }
-  function getActiveTodos(): ITodo[] {
-    return todos.filter((todo: ITodo) => !todo.completed);
-  }
-  function getCompletedTodos(): ITodo[] {
-    return todos.filter((todo: ITodo) => todo.completed);
   }
 </script>
 
